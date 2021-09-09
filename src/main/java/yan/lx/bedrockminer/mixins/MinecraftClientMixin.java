@@ -1,6 +1,7 @@
 package yan.lx.bedrockminer.mixins;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.Window;
@@ -48,6 +49,17 @@ public class MinecraftClientMixin {
             BlockHitResult blockHitResult = (BlockHitResult) this.crosshairTarget;
             if (world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.BEDROCK) && player.getMainHandStack().isEmpty()) {
                 BreakingFlowController.switchOnOff();
+            }
+            else if (world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.BEDROCK) && player.getMainHandStack().getItem().getName().equals(Items.STONE_AXE.getName())) {
+                BreakingFlowController.registerPosA(blockHitResult.getBlockPos());
+            }
+            else if (world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.BEDROCK) && player.getMainHandStack().getItem().getName().equals(Items.STONE_HOE.getName())) {
+                BreakingFlowController.registerPosB(blockHitResult.getBlockPos());
+            }
+            if (BreakingFlowController.AreaPrepared())
+            {
+                BreakingFlowController.addAllPosToList();
+                BreakingFlowController.resetRegisteredPos();
             }
         }
 
