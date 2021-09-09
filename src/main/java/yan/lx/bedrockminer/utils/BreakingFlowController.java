@@ -23,30 +23,58 @@ public class BreakingFlowController {
     }
 
     private static boolean working = false;
+    private static boolean boolA = false;
+    private static boolean boolB = false;
+    private static BlockPos PosA;
+    private static BlockPos PosB;
 
-    static {
-
+    public static void registerPosA(BlockPos posA){
+        PosA = posA;
+        boolA = true;
     }
-
-    public static void addBlockPosToList(BlockPos pos) {
+    public static void registerPosB(BlockPos posB){
+        PosB = posB;
+        boolB = true;
+    }
+    public static boolean AreaPrepared() {
+        return boolA && boolB;
+    }
+    public static void addAllPosToList() {
+        for (BlockPos pos : BlockPos.iterate(PosA, PosB)){
+            positionStorage.registerPos(pos, Boolean.FALSE);
+        }
+    }
+    public static void registerWaitingPos() {
+        for (BlockPos pos : positionStorage.getFalseMarkedPos()) {
+            if (addBlockPosToList(pos)) {
+                positionStorage.registerPos(pos,Boolean.TRUE);
+                return; //register one per tick
+            }
+        }
+    }
+    public static void resetRegisteredPos() {
+        boolA = false;
+        boolB = false;
+    }
+    public static boolean addBlockPosToList(BlockPos pos) {
         ClientWorld world = MinecraftClient.getInstance().world;
         if (world.getBlockState(pos).isOf(Blocks.BEDROCK)) {
             MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
             String haveEnoughItems = InventoryManager.warningMessage();
             if (haveEnoughItems != null) {
-                Messager.actionBar(haveEnoughItems);
-                return;
+                return false;
             }
-
             if (shouldAddNewTargetBlock(pos)){
                 TargetBlock targetBlock = new TargetBlock(pos, world);
                 cachedTargetBlockList.add(targetBlock);
-                System.out.println("新任务");
+                return true;
             }
         } else {
-            Messager.actionBar("请确保敲击的方块还是基岩！");
+            positionStorage.registerPos(pos, Boolean.TRUE);
+            //Messager.actionBar("请确保敲击的方块还是基岩！");
         }
+        return false;
     }
 
     public static void tick() {
@@ -55,7 +83,7 @@ public class BreakingFlowController {
         }
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
         PlayerEntity player = minecraftClient.player;
-
+        registerWaitingPos();
         if (!"survival".equals(minecraftClient.interactionManager.getCurrentGameMode().getName())) {
             return;
         }
@@ -75,6 +103,7 @@ public class BreakingFlowController {
                     continue;
                 } else if (status == TargetBlock.Status.FAILED || status == TargetBlock.Status.RETRACTED) {
                     cachedTargetBlockList.remove(i);
+                    positionStorage.registerPos(selectedBlock.getBlockPos(), Boolean.FALSE);
                 } else {
                     break;
                 }
@@ -88,7 +117,7 @@ public class BreakingFlowController {
     }
 
     public static WorkingMode getWorkingMode() {
-        return WorkingMode.VANILLA;
+        return WorkingMode.CARPET_EXTRA;
     }
 
     private static boolean shouldAddNewTargetBlock(BlockPos pos){
@@ -102,25 +131,25 @@ public class BreakingFlowController {
 
     public static void switchOnOff(){
         if (working){
-            Messager.chat("");
-            Messager.chat("Bedrock Miner已关闭。");
-            Messager.chat("Bedrock Miner stoped.");
-            Messager.chat("");
+            //Messager.chat("");
+            //Messager.chat("Bedrock Miner已关闭。");
+            Messager.chat("Bedrock Miner stopped.");
+            //Messager.chat("");
             working = false;
         } else {
-            Messager.chat("");
-            Messager.chat("╔════════════════════════════════╗");
-            Messager.chat("║ Bedrock Miner已启动！左键基岩即可自动破除基岩。                 ║");
-            Messager.chat("║                                                                        ║");
+           // Messager.chat("");
+           // Messager.chat("╔════════════════════════════════╗");
+            //Messager.chat("║ Bedrock Miner已启动！左键基岩即可自动破除基岩。                 ║");
+           // Messager.chat("║                                                                        ║");
             Messager.chat("║ Bedrock Miner started! Left click bedrock to break it.    ║");
-            Messager.chat("╚════════  Author: LXYan  作者：LXYan  ════════╝");
-            Messager.chat("");
+           // Messager.chat("╚════════  Author: LXYan  作者：LXYan  ════════╝");
+           // Messager.chat("");
             MinecraftClient minecraftClient = MinecraftClient.getInstance();
             if (!minecraftClient.isInSingleplayer()){
-                Messager.chat("看起来你好像是在服务器使用Bedrock Miner？");
-                Messager.chat("在使用本mod前请先征询其他玩家的意见。");
-                Messager.chat("It seems that you are playing on a server? ");
-                Messager.chat("Please ask other players' opinions first.");
+           //    Messager.chat("看起来你好像是在服务器使用Bedrock Miner？");
+           //     Messager.chat("在使用本mod前请先征询其他玩家的意见。");
+           //     Messager.chat("It seems that you are playing on a server? ");
+            //    Messager.chat("Please ask other players' opinions first.");
             }
             working = true;
         }
