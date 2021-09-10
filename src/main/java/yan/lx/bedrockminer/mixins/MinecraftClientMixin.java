@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import yan.lx.bedrockminer.utils.BreakingFlowController;
-
+import yan.lx.bedrockminer.utils.Messager;
 
 @Mixin(MinecraftClient.class)
 public class MinecraftClientMixin {
@@ -52,14 +52,17 @@ public class MinecraftClientMixin {
             }
             else if (world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.BEDROCK) && player.getMainHandStack().getItem().getName().equals(Items.STONE_AXE.getName())) {
                 BreakingFlowController.registerPosA(blockHitResult.getBlockPos());
+                Messager.actionBar("Added Position 1");
             }
             else if (world.getBlockState(blockHitResult.getBlockPos()).isOf(Blocks.BEDROCK) && player.getMainHandStack().getItem().getName().equals(Items.STONE_HOE.getName())) {
                 BreakingFlowController.registerPosB(blockHitResult.getBlockPos());
+                Messager.actionBar("Added Position 2");
             }
             if (BreakingFlowController.AreaPrepared())
             {
                 BreakingFlowController.addAllPosToList();
                 BreakingFlowController.resetRegisteredPos();
+                Messager.actionBar("Added Positions");
             }
         }
 
@@ -71,8 +74,6 @@ public class MinecraftClientMixin {
         if (world.getBlockState(blockPos).isOf(Blocks.BEDROCK) && BreakingFlowController.isWorking()) {
             BreakingFlowController.addBlockPosToList(blockPos);
         }
-
-
     }
 }
 
