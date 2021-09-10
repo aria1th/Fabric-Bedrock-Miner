@@ -4,40 +4,40 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.MinecraftClient;
+import java.util.Arrays;
 import java.util.ArrayList;
 
 import static net.minecraft.block.Block.sideCoversSmallSquare;
 
 public class CheckingEnvironment {
-
+    static final ArrayList<Direction> HORIZONTAL = new ArrayList<Direction>(Arrays.asList(Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH));
     public static BlockPos findNearbyFlatBlockToPlaceRedstoneTorch(ClientWorld world, BlockPos blockPos) {
-        if ((sideCoversSmallSquare(world, blockPos.east(), Direction.UP) && (world.getBlockState(blockPos.east().up()).getMaterial().isReplaceable()) || world.getBlockState(blockPos.east().up()).isOf(Blocks.REDSTONE_TORCH))) {
-            return blockPos.east();
-        } else if ((sideCoversSmallSquare(world, blockPos.west(), Direction.UP) && (world.getBlockState(blockPos.west().up()).getMaterial().isReplaceable()) || world.getBlockState(blockPos.west().up()).isOf(Blocks.REDSTONE_TORCH))) {
-            return blockPos.west();
-        } else if ((sideCoversSmallSquare(world, blockPos.north(), Direction.UP) && (world.getBlockState(blockPos.north().up()).getMaterial().isReplaceable()) || world.getBlockState(blockPos.north().up()).isOf(Blocks.REDSTONE_TORCH))) {
-            return blockPos.north();
-        } else if ((sideCoversSmallSquare(world, blockPos.south(), Direction.UP) && (world.getBlockState(blockPos.south().up()).getMaterial().isReplaceable()) || world.getBlockState(blockPos.south().up()).isOf(Blocks.REDSTONE_TORCH))) {
-            return blockPos.south();
+        for (Direction offset : HORIZONTAL) {
+            if ((sideCoversSmallSquare(world, blockPos.offset(offset), Direction.UP) && (world.getBlockState(blockPos.offset(offset).up()).getMaterial().isReplaceable()) || world.getBlockState(blockPos.offset(offset).up()).isOf(Blocks.REDSTONE_TORCH))) {
+                return blockPos.offset(offset);
+            }
         }
         return null;
     }
 
     public static BlockPos findPossibleSlimeBlockPos(ClientWorld world, BlockPos blockPos) {
-        if (world.getBlockState(blockPos.east()).getMaterial().isReplaceable() && (world.getBlockState(blockPos.east().up()).getMaterial().isReplaceable())) {
-            return blockPos.east();
-        } else if (world.getBlockState(blockPos.west()).getMaterial().isReplaceable() && (world.getBlockState(blockPos.west().up()).getMaterial().isReplaceable())) {
-            return blockPos.west();
-        } else if (world.getBlockState(blockPos.south()).getMaterial().isReplaceable() && (world.getBlockState(blockPos.south().up()).getMaterial().isReplaceable())) {
-            return blockPos.south();
-        } else if (world.getBlockState(blockPos.north()).getMaterial().isReplaceable() && (world.getBlockState(blockPos.north().up()).getMaterial().isReplaceable())) {
-            return blockPos.north();
+        for (Direction offset : HORIZONTAL) {
+            if (isCollidingPlayerEntity(world, blockPos.offset(offset))){
+                continue;
+            }
+            if (sideCoversSmallSquare(world, blockPos.offset(offset), Direction.UP) && (world.getBlockState(blockPos.offset(offset).up()).getMaterial().isReplaceable())) {
+                return blockPos.offset(offset);
+            }
         }
         return null;
     }
 
     public static boolean has2BlocksOfPlaceToPlacePiston(ClientWorld world, BlockPos blockPos) {
+        if (isCollidingPlayerEntity(world, blockPos) || isCollidingPlayerEntity(world, blockPos.up())){
+            return false;
+        }
         if (world.getBlockState(blockPos.up()).getHardness(world, blockPos.up()) == 0) {
             BlockBreaker.breakBlock(world, blockPos.up());
         }
@@ -46,18 +46,16 @@ public class CheckingEnvironment {
 
     public static ArrayList<BlockPos> findNearbyRedstoneTorch(ClientWorld world, BlockPos pistonBlockPos) {
         ArrayList<BlockPos> list = new ArrayList<>();
-        if (world.getBlockState(pistonBlockPos.east()).isOf(Blocks.REDSTONE_TORCH)) {
-            list.add(pistonBlockPos.east());
-        }
-        if (world.getBlockState(pistonBlockPos.west()).isOf(Blocks.REDSTONE_TORCH)) {
-            list.add(pistonBlockPos.west());
-        }
-        if (world.getBlockState(pistonBlockPos.south()).isOf(Blocks.REDSTONE_TORCH)) {
-            list.add(pistonBlockPos.south());
-        }
-        if (world.getBlockState(pistonBlockPos.north()).isOf(Blocks.REDSTONE_TORCH)) {
-            list.add(pistonBlockPos.north());
+        for (Direction offset : HORIZONTAL) {
+            if (world.getBlockState(pistonBlockPos.offset(offset)).isOf(Blocks.REDSTONE_TORCH)) {
+                list.add(pistonBlockPos.east());
+            }
         }
         return list;
+    }
+    public static boolean isCollidingPlayerEntity(ClientWorld world, BlockPos blockPos){
+        final MinecraftClient minecraftClient = MinecraftClient.getInstance();
+        PlayerEntity player = minecraftClient.player;
+        return player.collidesWithStateAtPos(blockPos, world.getBlockState(blockPos));
     }
 }

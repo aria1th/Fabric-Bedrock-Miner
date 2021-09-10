@@ -127,13 +127,16 @@ public class TargetBlock {
         }
         this.redstoneTorchBlockPos = CheckingEnvironment.findNearbyFlatBlockToPlaceRedstoneTorch(this.world, this.blockPos);
         if (this.redstoneTorchBlockPos == null) {
+            if (this.slimeBlockPos != null) {
+                BlockBreaker.breakBlock(world, slimeBlockPos);
+            }
             this.slimeBlockPos = CheckingEnvironment.findPossibleSlimeBlockPos(world, blockPos);
             if (slimeBlockPos != null) {
                 BlockPlacer.simpleBlockPlacement(slimeBlockPos, Blocks.SLIME_BLOCK);
                 redstoneTorchBlockPos = slimeBlockPos.up();
             } else {
                 this.status = Status.FAILED;
-                Messager.actionBar("无法放置红石火把！ Failed to place redstone torch!");
+                Messager.actionBar("Failed to place redstone torch!");
             }
         } else if (!this.world.getBlockState(this.blockPos).isOf(Blocks.BEDROCK) && this.world.getBlockState(this.pistonBlockPos).isOf(Blocks.PISTON)) {
             this.status = Status.RETRACTED;
@@ -156,7 +159,7 @@ public class TargetBlock {
             this.status = Status.UNINITIALIZED;
         } else if (!CheckingEnvironment.has2BlocksOfPlaceToPlacePiston(world, this.blockPos)) {
             this.status = Status.FAILED;
-            Messager.actionBar("无法放置活塞！ Failed to place piston!");
+            Messager.actionBar("Failed to place piston!");
         } else {
             this.status = Status.FAILED;
         }
